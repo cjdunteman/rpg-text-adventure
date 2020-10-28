@@ -2,39 +2,20 @@ import time
 from time import sleep
 import os
 import random
+from rich.console import Console
+from rich.style import Style
+from rich.theme import Theme
+from player import Player
+from weapon import Weapon
+from enemy import Enemy
 
-
-# Player Class
-class Player():
-    def __init__(self, name, level, xp, health, weapon, gold, wins, losses):
-        self.name = name
-        self.level = level
-        self.xp = xp
-        self.health = health
-        self.weapon = weapon
-        self.gold = gold
-        self.wins = wins
-        self.losses = losses
-
-
-# Weapon Class
-class Weapon():
-    def __init__(self, name, minDmg, maxDmg, gold):
-        self.name = name
-        self.minDmg = minDmg
-        self.maxDmg = maxDmg
-        self.gold = gold
-
-    def __repr__(self):
-        return "{}".format(self.name)
-
-
-class Enemy():
-    def __init__(self, name, attack, health):
-        self.name = name
-        self.attack = attack
-        self.health = health
-
+main = Theme({
+    "default": "#ffffff",
+    "success": "bold #374fff",
+    "warning": "red",
+    "gold": "#dfad12",
+})
+console = Console(theme=main)
 
 class Item():
     def __init__(self, name, gold, affect, amount):
@@ -52,7 +33,6 @@ class Item():
 
     def __repr__(self):
         return "{}".format(self.name)
-
 
 # Weapons
 dagger = Weapon("Dagger", 2, 4, 2)
@@ -87,14 +67,7 @@ player = Player(name, level, xp, health, dagger, gold, 0, 0)
 
 
 # Intro
-print("Your adventure begins now! Defeat monsters, level up, unlock new gear! Good luck, " + player.name + ".\n")
-# sleep(5)
-# print("3")
-# sleep(1)
-# print("2")
-# sleep(1)
-# print("1")
-# sleep(1)
+console.print("Your adventure begins now! Defeat monsters, level up, unlock new gear! Good luck, " + player.name + ".\n", style="gold")
 
 lvl_1_monsters = {"Spider": {"attack": 1, "health": 3},
                   "Goblin": {"attack": 2, "health": 6}, }
@@ -109,7 +82,8 @@ os.system("clear")
 playing = True
 while (playing):
     # Main menu
-    print("1) Fight\n2) Shop\n3) Inventory\n4) Stats\n0) Quit")
+    console.print("1) Fight\n2) Shop\n3) Inventory\n4) Stats\n0) Quit",
+    style="default")
 
     # Get action
     action = int(input())
@@ -131,8 +105,9 @@ while (playing):
         fighting = True
         # While fighting
         while (fighting):
-            print(player.name + " (Lvl " + str(player.level) + ")\nHealth: " + str(player.health) +
-                  "\n\n" + monster + "\nHealth: " + str(monster_health) + "\n")
+            console.print(player.name + " (Lvl " + str(player.level) + ")\nHealth: " + str(player.health) +
+                  "\n\n" + monster + "\nHealth: " + str(monster_health) + "\n",
+                  style="default")
 
             choice = int(input("1) Attack\n2) Run\n"))
 
@@ -145,7 +120,8 @@ while (playing):
                     dmgDealt = random.randint(
                         player.weapon.minDmg, player.weapon.maxDmg)
                 monster_health -= dmgDealt
-                print("You dealt {} damage.\n".format(dmgDealt))
+                console.print("You dealt {} damage.\n".format(dmgDealt),
+                style="default")
                 # sleep(1)
 
                 # If monster died
@@ -160,18 +136,19 @@ while (playing):
                         player.level += 1
                         player.gold += 2
                         player.health += 5
-                    print("You are victorious!\n")
+                    console.print("You are victorious!\n", style="success")
                     del monster
                 # Monster attacks
                 else:
                     player.health -= monster_attack
-                    print("You took {} damage.\n".format(monster_attack))
+                    console.print("You took [warning]{}[/warning] damage.\n".format(monster_attack))
                     # sleep(1)
 
                     # If player died
                     if player.health <= 0:
                         fighting = False
-                        print("You have been defeated!\n")
+                        console.print("You have been defeated!\n",
+                        style="warning")
                         playing = False
 
                         del monster
@@ -187,28 +164,31 @@ while (playing):
 
         # List weapons in shop
         if (action == 1):
+            console.print("Gold: " + str(player.gold), style="gold")
             count = 1
             for weapon in weaponList:
-                print(str(count) + ") " + weapon.name + " - Dmg: " + str(weapon.minDmg) + "-" + str(weapon.maxDmg) +
-                      " - Cost: " + str(weapon.gold))
+                console.print(str(count) + ") " + weapon.name + " - Dmg: " + str(weapon.minDmg) + "-" + str(weapon.maxDmg) +
+                      " - Cost: " + str(weapon.gold), style="gold")
                 count += 1
+            # Get input for weapon choice
             weapon_no = int(input()) - 1
-            print("0) Back")
+            console.print("0) Back")
 
             # If player has enough gold, buy weapon
             if (player.gold >= weaponList[weapon_no].gold):
                 player.gold -= weaponList[weapon_no].gold
                 player.weapon = weaponList[weapon_no]
             else:
-            	print("You do not have enough gold.")
+            	console.print("You do not have enough gold.", style="warning")
         # List items in shop
         if (action == 2):
+            console.print("Gold: " + str(player.gold), style="gold")
             count = 1
             for item in itemList:
-                print(str(count) + ") " + item.name +
+                console.print(str(count) + ") " + item.name +
                       " - Cost: " + str(item.gold))
                 count += 1
-            print("0) Back")
+            console.print("0) Back")
             # Get input for item choice
             item_no = int(input()) - 1
 
@@ -216,18 +196,20 @@ while (playing):
             if (player.gold >= itemList[item_no].gold):
                 player.gold -= itemList[item_no].gold
                 itemList[item_no].use()
+            else:
+                console.print("You do not have enough gold.", style="warning")
 
     # Show inventory
     elif (action == 3):
         os.system("clear")
-        print(player.weapon.name + " - Dmg: " + str(player.weapon.minDmg) + "-" + str(player.weapon.maxDmg) +
+        console.print(player.weapon.name + " - Dmg: " + str(player.weapon.minDmg) + "-" + str(player.weapon.maxDmg) +
               "\nGold: " + str(player.gold) + "\n")
     elif (action == 4):
     	os.system("clear")
-    	print(player.name + "\nLvl: " + str(player.level) + "\nGold: " + str(player.gold) + "\nHealth: " + str(player.health) + "\nWeapon: " + (player.weapon.name) + "\n\nWins: " + str(player.wins) + "\nLosses: " + str(player.losses))
-	# elif (action == 9):
-	# 	os.system("clear")
-	# 	print("")
+    	console.print(player.name + "\nLvl: " + str(player.level) + "\nGold: " +
+        str(player.gold) + "\nHealth: " + str(player.health) + "\nWeapon: " +
+        (player.weapon.name) + "\n\nWins: " + str(player.wins) + "\nLosses: " +
+        str(player.losses) + "\n")
     elif (action == 0):
         action = int(input('Are you sure you want to quit?\n1) Yes\n2) No\n'))
         if (action == 1):
